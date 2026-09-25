@@ -1,0 +1,39 @@
+bundle:
+  name: fda_510k_predicate_lineage
+
+include:
+  - resources/*.yml
+
+# Workspace-specific values are not stored here. They come from environment
+# variables (see .env.example):
+#   DATABRICKS_CONFIG_PROFILE  which workspace to deploy to (profile in ~/.databrickscfg)
+#   BUNDLE_VAR_catalog         value for var.catalog
+#   BUNDLE_VAR_schema          value for var.schema
+variables:
+  catalog:
+    description: Unity Catalog catalog for all tables and the Volume
+  schema:
+    description: Schema for all tables and the Volume
+  volume:
+    description: Volume for raw files (openFDA exports and PDFs)
+    default: fda_raw_pdfs
+  table_prefix:
+    description: Prefix for table names, needed when the schema is shared with other projects
+    default: fda_
+  product_codes:
+    description: Comma-separated FDA product codes that define the PDF sample
+    default: JDI,LPH,LZO
+  max_pdfs:
+    description: Maximum PDFs to download per run
+    default: "100"
+
+artifacts:
+  fda_ingest_wheel:
+    type: whl
+    path: .
+    build: uv build --wheel
+
+targets:
+  dev:
+    mode: development
+    default: true

@@ -1,0 +1,31 @@
+[project]
+name = "fda_ingest"
+version = "0.1.0"
+description = "Ingestion for the FDA 510(k) predicate lineage project"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "ijson>=3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pypdf>=4",
+]
+
+# Entry points used by the Databricks job (python_wheel_task).
+[project.scripts]
+load_openfda = "fda_ingest.tasks.load_openfda:main"
+load_pdfs = "fda_ingest.tasks.load_pdfs:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

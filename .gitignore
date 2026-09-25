@@ -7,3 +7,4 @@ fda_check_out/
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+*:Zone.Identifier

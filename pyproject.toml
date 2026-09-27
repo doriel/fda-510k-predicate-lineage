@@ -3,15 +3,20 @@ name = "fda_ingest"
 version = "0.1.0"
 description = "Ingestion for the FDA 510(k) predicate lineage project"
 requires-python = ">=3.10"
+# Runtime dependencies only: these go into the wheel deployed to Databricks.
 dependencies = [
     "requests>=2.31",
     "ijson>=3.2",
 ]
 
-[project.optional-dependencies]
+# Local-only tools, installed with `uv sync --all-groups`, never shipped in the wheel.
+[dependency-groups]
 dev = [
     "pytest>=8",
     "pypdf>=4",
+]
+dbt = [
+    "dbt-databricks>=1.12,<1.13",
 ]
 
 # Entry points used by the Databricks job (python_wheel_task).

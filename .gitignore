@@ -13,3 +13,5 @@ dist/
 build/
 *.egg-info/
 .pytest_cache/
+.venv-dbt/
+dbt/.user.yml

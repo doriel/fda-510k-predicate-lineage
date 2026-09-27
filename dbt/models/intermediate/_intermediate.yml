@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: int_documents_parsed
+    description: >
+      One row per (K-number, PDF content hash, parser version): the raw
+      ai_parse_document output and the concatenated text used for extraction.
+      Incremental and protected from full refresh (ADR 0001).
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "k_number || '|' || content_sha256 || '|' || parser_version"
+    columns:
+      - name: k_number
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_pdf_files')
+                field: k_number
+      - name: content_sha256
+        data_tests:
+          - not_null
+      - name: parser_version
+        data_tests:
+          - not_null
+      - name: doc_text
+        description: Empty only if the parser returned no elements; see assert_no_parse_errors.

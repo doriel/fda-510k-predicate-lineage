@@ -1,0 +1,27 @@
+name: fda_510k
+version: "0.1.0"
+config-version: 2
+profile: fda_510k
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Same prefix as the bronze tables, so this project's tables are easy to find
+  # in a schema shared with other projects.
+  table_prefix: fda_
+  # Bump when the parse step changes; new rows are added, old ones kept (ADR 0005).
+  parser_version: v1
+  # Max documents parsed per run, to keep AI cost predictable. Set to -1 for no limit.
+  parse_batch_limit: 100
+
+models:
+  fda_510k:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table

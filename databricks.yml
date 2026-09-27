@@ -1,39 +1,35 @@
-bundle:
-  name: fda_510k_predicate_lineage
+name: fda_510k
+version: "0.1.0"
+config-version: 2
+profile: fda_510k
 
-include:
-  - resources/*.yml
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
 
-# Workspace-specific values are not stored here. They come from environment
-# variables (see .env.example):
-#   DATABRICKS_CONFIG_PROFILE  which workspace to deploy to (profile in ~/.databrickscfg)
-#   BUNDLE_VAR_catalog         value for var.catalog
-#   BUNDLE_VAR_schema          value for var.schema
-variables:
-  catalog:
-    description: Unity Catalog catalog for all tables and the Volume
-  schema:
-    description: Schema for all tables and the Volume
-  volume:
-    description: Volume for raw files (openFDA exports and PDFs)
-    default: fda_raw_pdfs
-  table_prefix:
-    description: Prefix for table names, needed when the schema is shared with other projects
-    default: fda_
-  product_codes:
-    description: Comma-separated FDA product codes that define the PDF sample
-    default: JDI,LPH,LZO
-  max_pdfs:
-    description: Maximum PDFs to download per run
-    default: "100"
+clean-targets: ["target", "dbt_packages"]
 
-artifacts:
-  fda_ingest_wheel:
-    type: whl
-    path: .
-    build: uv build --wheel
+vars:
+  # Same prefix as the bronze tables, so this project's tables are easy to find
+  # in a schema shared with other projects.
+  table_prefix: fda_
+  # Bump when the parse step changes; new rows are added, old ones kept (ADR 0005).
+  parser_version: v1
+  # Max documents parsed per run, to keep AI cost predictable. Set to -1 for no limit.
+  parse_batch_limit: 100
 
-targets:
-  dev:
-    mode: development
-    default: true
+  # Predicate extraction (macros/predicate_extraction.sql).
+  # Bump prompt_version whenever the prompt or the response schema changes.
+  prompt_version: v2
+  # Model serving endpoint used by ai_query (Serving page in the workspace).
+  extraction_endpoint: databricks-claude-sonnet-4-5
+  # Max documents extracted per run. Set to -1 for no limit.
+  extract_batch_limit: 100
+
+models:
+  fda_510k:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table

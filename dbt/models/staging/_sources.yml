@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Raw tables written by the Python ingestion job (src/fda_ingest).
+    database: "{{ target.database }}"
+    schema: "{{ target.schema }}"
+    tables:
+      - name: openfda_510k
+        identifier: "{{ var('table_prefix') }}bronze_openfda_510k"
+        description: All openFDA 510(k) records, one row per K-number per export.
+        columns:
+          - name: k_number
+            data_tests:
+              - not_null
+          - name: export_date
+            data_tests:
+              - not_null
+
+      - name: pdf_files
+        identifier: "{{ var('table_prefix') }}bronze_pdf_files"
+        description: One row per PDF download attempt for the sample, including failures.
+        columns:
+          - name: k_number
+            data_tests:
+              - not_null
+          - name: download_status
+            data_tests:
+              - not_null

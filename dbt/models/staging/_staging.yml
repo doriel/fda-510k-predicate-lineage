@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_openfda__submissions
+    description: One row per 510(k) from the latest openFDA export.
+    columns:
+      - name: k_number
+        data_tests:
+          - unique
+          - not_null
+      - name: decision_date
+        description: Null if openFDA sent a date that could not be parsed.
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: statement_or_summary
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Summary", "Statement"]
+              config:
+                severity: warn
+
+  - name: stg_pdf_files
+    description: Latest download attempt per K-number in the PDF sample.
+    columns:
+      - name: k_number
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_openfda__submissions')
+                field: k_number
+      - name: download_status
+        data_tests:
+          - not_null
+      - name: content_sha256
+        description: Set only when download_status = 'ok'.

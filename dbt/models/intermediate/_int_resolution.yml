@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: int_predicate_resolution
+    description: >
+      Every extracted citation with a resolution status against openFDA
+      (ADR 0004). Same grain as int_predicate_citations.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "subject_k_number || '|' || content_sha256 || '|' || parser_version || '|' || prompt_version || '|' || model_endpoint || '|' || cast(citation_seq as string)"
+    columns:
+      - name: resolution_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - resolved
+                  - repaired
+                  - malformed
+                  - not_found
+                  - date_violation
+                  - self_citation
+                  - exempt
+                  - name_only
+                  - unidentified
+                  - other_pathway
+      - name: resolved_k_number
+        description: Set only for resolved and repaired citations.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_openfda__submissions')
+                field: k_number
+      - name: date_order_checked
+        description: False when openFDA lacks a decision date for the subject or the predicate.
+
+  - name: int_extraction_recall_gaps
+    description: >
+      K-numbers found by regex in a document but not extracted by the LLM,
+      for the accepted prompt version. Candidates to review, not confirmed misses.
+
+unit_tests:
+  - name: test_resolution_statuses
+    description: One citation per status, including the K9903690 repair from the spike.
+    model: int_predicate_resolution
+    given:
+      - input: ref('int_predicate_citations')
+        rows:
+          # resolved: exists, cleared before the subject
+          - {subject_k_number: K120001, citation_seq: 1, role: predicate, identifier_type: k_number, identifier_normalized: K100001, is_well_formed: true}
+          # date_violation: cleared after the subject
+          - {subject_k_number: K120001, citation_seq: 2, role: predicate, identifier_type: k_number, identifier_normalized: K150001, is_well_formed: true}
+          # not_found: well-formed, unknown to openFDA
+          - {subject_k_number: K120001, citation_seq: 3, role: predicate, identifier_type: k_number, identifier_normalized: K100002, is_well_formed: true}
+          # repaired: 7-digit typo, candidate exists and predates the subject
+          - {subject_k_number: K120001, citation_seq: 4, role: predicate, identifier_type: k_number, identifier_normalized: K9903690, is_well_formed: false}
+          # malformed: 7 digits not ending in 0, no repair rule applies
+          - {subject_k_number: K120001, citation_seq: 5, role: predicate, identifier_type: k_number, identifier_normalized: K1234567, is_well_formed: false}
+          # malformed: repair candidate K991485 does not exist
+          - {subject_k_number: K120001, citation_seq: 6, role: predicate, identifier_type: k_number, identifier_normalized: K9914850, is_well_formed: false}
+          # self_citation
+          - {subject_k_number: K120001, citation_seq: 7, role: predicate, identifier_type: k_number, identifier_normalized: K120001, is_well_formed: true}
+          # exempt, name_only, unidentified, other_pathway
+          - {subject_k_number: K120001, citation_seq: 8, role: predicate, identifier_type: exempt}
+          - {subject_k_number: K120001, citation_seq: 9, role: predicate, identifier_type: none}
+          - {subject_k_number: K120001, citation_seq: 10, role: predicate, identifier_type: unidentified}
+          - {subject_k_number: K120001, citation_seq: 11, role: predicate, identifier_type: pma, identifier_normalized: P123456, is_well_formed: true}
+      - input: ref('stg_openfda__submissions')
+        rows:
+          - {k_number: K120001, decision_date: "2012-06-01"}
+          - {k_number: K100001, decision_date: "2010-01-15"}
+          - {k_number: K150001, decision_date: "2015-03-01"}
+          - {k_number: K990369, decision_date: "1999-05-01"}
+    expect:
+      rows:
+        - {citation_seq: 1, resolution_status: resolved, resolved_k_number: K100001}
+        - {citation_seq: 2, resolution_status: date_violation, resolved_k_number: null}
+        - {citation_seq: 3, resolution_status: not_found, resolved_k_number: null}
+        - {citation_seq: 4, resolution_status: repaired, resolved_k_number: K990369}
+        - {citation_seq: 5, resolution_status: malformed, resolved_k_number: null}
+        - {citation_seq: 6, resolution_status: malformed, resolved_k_number: null}
+        - {citation_seq: 7, resolution_status: self_citation, resolved_k_number: null}
+        - {citation_seq: 8, resolution_status: exempt, resolved_k_number: null}
+        - {citation_seq: 9, resolution_status: name_only, resolved_k_number: null}
+        - {citation_seq: 10, resolution_status: unidentified, resolved_k_number: null}
+        - {citation_seq: 11, resolution_status: other_pathway, resolved_k_number: null}

@@ -27,9 +27,15 @@ vars:
   # Max documents extracted per run. Set to -1 for no limit.
   extract_batch_limit: 100
 
+  # Prompt version whose results feed the marts. Changing it is a reviewed
+  # decision, separate from running a new prompt version (ADR 0005).
+  accepted_prompt_version: v2
+
 models:
   fda_510k:
     staging:
       +materialized: view
     intermediate:
+      +materialized: table
+    marts:
       +materialized: table

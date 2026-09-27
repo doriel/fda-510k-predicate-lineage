@@ -27,7 +27,8 @@ select
     try_to_date(raw:date_received::string)                      as date_received,
     raw:decision_code::string                                   as decision_code,
     raw:clearance_type::string                                  as clearance_type,
-    raw:statement_or_summary::string                            as statement_or_summary,
+    -- About 56k older records have this blank; store it as null, not ''.
+    nullif(trim(raw:statement_or_summary::string), '')          as statement_or_summary,
     export_date
 from records
 -- Guard against duplicate records inside one export.

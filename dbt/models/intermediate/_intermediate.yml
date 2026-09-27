@@ -26,3 +26,59 @@ models:
           - not_null
       - name: doc_text
         description: Empty only if the parser returned no elements; see assert_no_parse_errors.
+
+  - name: int_predicate_extractions
+    description: >
+      One row per (document, parser version, prompt version, model endpoint):
+      the raw ai_query JSON and document-level fields. Incremental and
+      protected from full refresh (ADR 0001, ADR 0005).
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "k_number || '|' || content_sha256 || '|' || parser_version || '|' || prompt_version || '|' || model_endpoint"
+    columns:
+      - name: k_number
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_documents_parsed')
+                field: k_number
+      - name: prompt_version
+        data_tests:
+          - not_null
+      - name: model_endpoint
+        data_tests:
+          - not_null
+      - name: predicates_declared
+        description: The model's own count. A warning signal only; unreliable on long lists (ADR 0003).
+
+  - name: int_predicate_citations
+    description: >
+      One row per predicate or reference device extracted from a document,
+      for every prompt version. Identifiers are as extracted; resolution
+      happens downstream (ADR 0004).
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "subject_k_number || '|' || content_sha256 || '|' || parser_version || '|' || prompt_version || '|' || model_endpoint || '|' || cast(citation_seq as string)"
+    columns:
+      - name: subject_k_number
+        data_tests:
+          - not_null
+      - name: role
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["predicate", "reference"]
+      - name: identifier_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["k_number", "pma", "de_novo", "exempt", "none", "unidentified"]
+      - name: is_well_formed
+        description: >
+          Format check for k_number, pma and de_novo identifiers. False means a
+          malformed number (for example K9903690, printed with 7 digits in K123598).

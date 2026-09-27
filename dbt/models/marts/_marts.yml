@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: fct_predicate_edge
+    description: >
+      Predicate lineage edges: subject device cites predicate device.
+      One row per (subject_k_number, predicate_k_number), accepted prompt version only.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "subject_k_number || '|' || predicate_k_number"
+      # A predicate must be cleared on or before the device that cites it.
+      - predicate_precedes_subject:
+          arguments:
+            subject_date: subject_decision_date
+            predicate_date: predicate_decision_date
+      # A device cannot be its own predicate.
+      - columns_differ:
+          arguments:
+            column_a: subject_k_number
+            column_b: predicate_k_number
+    columns:
+      - name: subject_k_number
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_openfda__submissions')
+                field: k_number
+      - name: predicate_k_number
+        data_tests:
+          - not_null
+          - matches_pattern:
+              arguments:
+                pattern: "^K[0-9]{6}$"
+          # The predicate must exist in openFDA.
+          - relationships:
+              arguments:
+                to: ref('stg_openfda__submissions')
+                field: k_number
+      - name: predicate_age_days
+        description: Days between the predicate's clearance and the subject's clearance.

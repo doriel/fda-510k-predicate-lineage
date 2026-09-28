@@ -52,3 +52,22 @@ models:
                 values: [identifier, name_match]
       - name: name_match_score
         description: Similarity score of the name match, null for identifier edges.
+
+  - name: mart_extraction_quality
+    description: >
+      Pipeline quality metrics, one row per metric, accepted prompt version.
+      Groups: coverage, resolution, graph, measured_quality (from the manual
+      review seeds). rate = numerator / denominator.
+    columns:
+      - name: metric
+        data_tests:
+          - unique
+          - not_null
+      - name: metric_group
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [coverage, resolution, graph, measured_quality]
+      - name: numerator
+        data_tests:
+          - not_null

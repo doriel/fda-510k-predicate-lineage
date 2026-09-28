@@ -1,0 +1,86 @@
+resources:
+  jobs:
+    fda_pipeline:
+      name: fda_pipeline
+      description: >
+        Daily pipeline: load openFDA 510(k) metadata (only when there is a new export),
+        download a batch of new summary PDFs, then run dbt (parse and extract the new
+        documents only, rebuild resolution, lineage graph, quality mart and tests).
+
+      # Every day at 13:00 Lisbon time. Paused automatically in the dev target
+      # (development mode); active in the prod target.
+      schedule:
+        quartz_cron_expression: "0 0 13 * * ?"
+        timezone_id: Europe/Lisbon
+        pause_status: UNPAUSED
+
+      max_concurrent_runs: 1
+
+      email_notifications:
+        on_failure:
+          - ${workspace.current_user.userName}
+
+      tasks:
+        - task_key: load_openfda
+          environment_key: default
+          python_wheel_task:
+            package_name: fda_ingest
+            entry_point: load_openfda
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.schema}
+              - --volume
+              - ${var.volume}
+              - --table-prefix
+              - ${var.table_prefix}
+
+        - task_key: load_pdfs
+          depends_on:
+            - task_key: load_openfda
+          environment_key: default
+          python_wheel_task:
+            package_name: fda_ingest
+            entry_point: load_pdfs
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.schema}
+              - --volume
+              - ${var.volume}
+              - --table-prefix
+              - ${var.table_prefix}
+              - --product-codes
+              - ${var.product_codes}
+              - --max-pdfs
+              - ${var.max_pdfs}
+
+        # dbt runs on the SQL warehouse as the job owner. Databricks generates the
+        # dbt profile from warehouse_id, catalog and schema, so no token is needed.
+        # The AI models are incremental with full refresh disabled (ADR 0001):
+        # only documents not yet processed go through ai_parse_document and ai_query.
+        - task_key: dbt_build
+          depends_on:
+            - task_key: load_pdfs
+          environment_key: dbt
+          dbt_task:
+            project_directory: ../dbt
+            warehouse_id: ${var.warehouse_id}
+            catalog: ${var.catalog}
+            schema: ${var.schema}
+            commands:
+              - "dbt build --vars '{parse_batch_limit: ${var.ai_batch_limit}, extract_batch_limit: ${var.ai_batch_limit}}'"
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+            dependencies:
+              - ../dist/*.whl
+        - environment_key: dbt
+          spec:
+            environment_version: "2"
+            dependencies:
+              - dbt-databricks>=1.12,<1.13

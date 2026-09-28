@@ -1,0 +1,63 @@
+# Continuous integration. Runs without access to Databricks: it checks the
+# Python code and the dbt project structure. Running the models, the data tests
+# and the dbt unit test needs the workspace and happens in the daily job.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel a running check when a newer commit arrives on the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Check the lock file matches pyproject.toml
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Run unit tests
+        run: uv run pytest
+
+  dbt:
+    name: dbt parse
+    runs-on: ubuntu-latest
+    # dbt needs a profile to parse, but never connects during parse.
+    # These are placeholders, not real workspace values.
+    env:
+      DBT_DATABRICKS_HOST: ci.cloud.databricks.com
+      DBT_DATABRICKS_HTTP_PATH: /sql/1.0/warehouses/ci
+      BUNDLE_VAR_catalog: ci
+      BUNDLE_VAR_schema: ci
+    defaults:
+      run:
+        working-directory: dbt
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Parse the dbt project (models, tests, seeds, macros, YAML)
+        run: uv run dbt parse --no-partial-parse
+
+      - name: List models
+        run: uv run dbt ls --resource-type model

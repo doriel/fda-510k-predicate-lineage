@@ -1,5 +1,7 @@
 # FDA 510(k) Predicate Lineage
 
+[![CI](https://github.com/doriel/fda-510k-predicate-lineage/actions/workflows/ci.yml/badge.svg)](https://github.com/doriel/fda-510k-predicate-lineage/actions/workflows/ci.yml)
+
 Extracting predicate device lineage from FDA 510(k) summary PDFs with Databricks AI functions, then validating it against openFDA with dbt.
 
 A 510(k) clearance lets a medical device go to market by showing it is substantially equivalent to a device already on the market: its **predicate**. openFDA publishes the clearances as structured data, but not which predicates each device cited. That information only exists in the summary PDFs, many of them scanned, faxed or partly handwritten. This project turns those documents into a lineage graph (device cites predicate) and measures how far the extracted data can be trusted.
@@ -93,6 +95,8 @@ These checks measure recall on K-numbers present in the text and precision of na
 - **AI output checks**: no failed `ai_query` calls, no unparsed documents, unique keys per prompt version.
 - **Review coverage**: a warning when a new recall gap or name match appears that the manual reviews do not cover yet, so the measured quality cannot silently go out of date.
 
+**CI** ([GitHub Actions](.github/workflows/ci.yml)) runs on every push and pull request: it checks the lock file, runs the Python unit tests and parses the dbt project. It has no access to the Databricks workspace, so models, data tests and the dbt unit test run in the daily job instead.
+
 Findings that shaped these checks, such as documents citing predicates by name only, reference devices listed next to predicates, OCR misreading a document's own number into a real but unrelated device, and typos in the source PDFs, are recorded in the [decision records](docs/decisions/README.md).
 
 ## Design decisions
@@ -115,6 +119,7 @@ The full physical model is in [docs/data-model.md](docs/data-model.md).
 - **Databricks Asset Bundles** for the daily job (Python wheel tasks and a dbt task), with `dev` and `prod` targets
 - **Python** for ingestion, with pytest unit tests
 - **uv** for dependencies (`uv.lock`)
+- **GitHub Actions** for CI
 
 ## Running it
 
@@ -143,6 +148,7 @@ No workspace details or secrets are stored in the repository: everything comes f
 
 ```
 databricks.yml          Asset Bundle (workspace comes from the environment)
+.github/workflows/      CI
 resources/              Databricks job definition (daily pipeline)
 src/fda_ingest/         Python ingestion package
 tests/                  pytest tests for the ingestion code
@@ -156,7 +162,6 @@ scripts/                Feasibility check and spike SQL
 ## Next steps
 
 - A dashboard on the lineage graph and the quality mart
-- CI with GitHub Actions (unit tests and dbt parsing; the workspace itself is not reachable from CI)
 - Hand-label 20 to 30 documents and report precision and recall per field and era ([ADR 0006](docs/decisions/0006-hand-labeled-evaluation-set.md))
 - Capture primary and additional predicates separately (prompt v3)
 - Extend the sample beyond three product codes

@@ -1,6 +1,6 @@
 # 0004. Citations carry an identifier type and a resolution status, validated in dbt
 
-- Status: Accepted
+- Status: Accepted, amended 2026-09-28 (name matching)
 - Date: 2026-09-25
 
 ## Context
@@ -56,3 +56,49 @@ passes the existence and date checks.
 - K9903690 and K9914850 printed on page 1 of K123598.
 - K121819 predicate table: Mepitac listed as "Class I".
 - K960395: "Predicated device 1" and "2", never named.
+
+## Amendment, 2026-09-28: name matching
+
+### Context
+
+36 of 320 predicate citations in the sample named a device without any
+identifier (`identifier_type = none`), for example "PFC Total Hip System,
+Johnson & Johnson". Leaving them all as `name_only` would drop real lineage.
+
+### Decision
+
+- Match them against openFDA with a deterministic score, no LLM:
+  Jaccard similarity on words from the device name plus the company.
+  When no manufacturer is cited, the subject device's applicant is used,
+  since most such predicates are the same company's earlier products.
+- Only candidates in the same review panel, cleared on or before the subject.
+- Accept a match (`resolved_by_name`) only when the best score is at least
+  0.6 **and** at least 0.1 ahead of the second candidate. Otherwise the
+  citation stays `name_only` (ambiguous or no match), never guessed.
+- Every resolved citation and edge carries `resolution_method`:
+  `identifier` (from a K-number) or `name_match` (less certain), so users of
+  the graph can filter.
+
+Additional status:
+
+| Status | Meaning |
+|---|---|
+| `resolved_by_name` | Cited by name only, confidently matched to one openFDA record |
+
+### Consequences
+
+- The graph gains edges that would otherwise be lost, clearly marked as name matches.
+- Thresholds favor precision over recall: some correct matches stay unresolved
+  (for example when one product has several clearances with the same name).
+- The name matching reads from `int_predicate_citations`, not from the
+  resolution, to avoid a dependency cycle.
+
+### Evidence
+
+- Two review rounds on the 36 citations. The first showed normalization gaps
+  ("P.F.C." split into single letters, "MetalTM", plurals, missing
+  manufacturers). After fixing them: 15 matched, reviewed in the seed
+  `name_match_review`: 13 correct, 2 plausible, 0 wrong. 4 ambiguous, 17 no match.
+- Without the subject-applicant fallback, "Trident Porous Titanium Acetabular
+  Shell" (Stryker) scored higher against a Biomet product with a near-identical
+  generic name.

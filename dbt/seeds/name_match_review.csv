@@ -1,0 +1,16 @@
+subject_k_number,cited_device_name,matched_k_number,verdict,note
+K983035,Universal® Acetabular Component,K861433,correct,"Identical name, same company (Biomet)"
+K955871,Straight Stem Femoral Component,K940307,correct,Howmedica Straight Stem Femoral Component
+K090897,Trident® Large Diameter Acetabular Inserts,K062419,correct,Identical name
+K090897,Trident® Constrained Acetabular Insert,K061654,correct,Identical name
+K955871,Anatomic Hip,K922071,correct,Zimmer Anatomic Hip System
+K020497,Osteonics® Secur-Fit™ AD Generation II Acetabular Component System,K983502,correct,Identical name
+K983035,Mallory-Head® Acetabular Component,K861114,correct,Mallory/Head acetabular component by Biomet
+K960588,Proximal Third Femoral Prosthesis,K872025,correct,Porocoat proximal femoral third prosthesis by DePuy
+K021878,PFC Total Hip System,K944132,correct,P.F.C. Total Hip System by Johnson & Johnson
+K983035,Healey™ Revision Acetabular Component,K921139,correct,Healey Revision Component System by Biomet
+K960658,Howmedica Exeter Hip,K803126,plausible,Original Exeter Total Hip System; Exeter II (K891454) also exists
+K021878,ESKA Modular Hip System,K993027,correct,"ESKA Modular Hip System, filed by Specs USA"
+K090897,TridentTM Porous Titanium Acetabular Shell,K010170,correct,"Trident porous titanium acetabular component by Howmedica Osteonics, not the similar Biomet product"
+K011533,Ceramic Articul/eze Femoral Balls,K952088,plausible,"Zirconia Articul/eze femoral balls; zirconia is a ceramic, not confirmed in the PDF"
+K983035,Recovery Protusio Cage,K971890,correct,Recovery Protrusio Cage by Biomet; the PDF misspells Protrusio

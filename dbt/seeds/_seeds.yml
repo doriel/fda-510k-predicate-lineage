@@ -28,3 +28,34 @@ seeds:
       - name: is_real_miss
         data_tests:
           - not_null
+
+  - name: name_match_review
+    description: >
+      Manual review of the name matches (int_name_resolution, match_status = matched),
+      prompt v2, thresholds 0.6 score and 0.1 margin, reviewed 2026-09-28.
+      One row per matched citation. verdict: correct (clearly the cited device),
+      plausible (likely, not confirmable without the PDF), wrong.
+    config:
+      column_types:
+        subject_k_number: string
+        cited_device_name: string
+        matched_k_number: string
+        verdict: string
+        note: string
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "subject_k_number || '|' || cited_device_name"
+    columns:
+      - name: verdict
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [correct, plausible, wrong]
+      - name: matched_k_number
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_openfda__submissions')
+                field: k_number

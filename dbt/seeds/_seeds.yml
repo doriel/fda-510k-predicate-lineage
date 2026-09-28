@@ -1,0 +1,30 @@
+version: 2
+
+seeds:
+  - name: recall_gap_review
+    description: >
+      Manual review of the recall check (int_extraction_recall_gaps), prompt v2,
+      sample of 82 documents, reviewed 2026-09-28. One row per K-number found by
+      regex in a document but not extracted by the LLM, classified by reading the
+      surrounding text. is_real_miss = true means the LLM should have extracted it.
+    config:
+      column_types:
+        document_k_number: string
+        candidate_k_number: string
+        category: string
+        is_real_miss: boolean
+        note: string
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "document_k_number || '|' || candidate_k_number"
+    columns:
+      - name: category
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [real_miss, compatible_device, product_family, co_submission, ocr_artifact]
+      - name: is_real_miss
+        data_tests:
+          - not_null

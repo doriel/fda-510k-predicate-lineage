@@ -1,0 +1,42 @@
+document_k_number,candidate_k_number,category,is_real_miss,note
+K022403,K000403,ocr_artifact,false,Header number next to page text; not in openFDA
+K022520,K002520,ocr_artifact,false,Own number K022520 misread; K002520 exists in openFDA as an unrelated spatula
+K022520,K003237,compatible_device,false,"U2 hip stem the cup is used with, not a predicate"
+K022556,K022536,ocr_artifact,false,Own number misread on the indications form; K022536 exists in openFDA as an unrelated connector
+K034028,K034008,ocr_artifact,false,Own number misread in the page header; not in openFDA
+K103012,K000242,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K040601,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K040613,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K041906,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K042842,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K051335,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K051556,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K051858,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K052787,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K063279,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K070479,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K071676,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K080980,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K083392,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K100269,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K993082,compatible_device,false,"Listed under ""The proposed femoral heads mate with the following devices"""
+K103012,K103018,ocr_artifact,false,Handwritten own number misread; not in openFDA
+K120531,K072857,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K073337,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K080885,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K082792,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K083558,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K093944,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K103189,compatible_device,false,Components of the Medacta system the device is used with
+K120531,K112115,compatible_device,false,Components of the Medacta system the device is used with
+K121439,K151430,ocr_artifact,false,"Stray number next to ""THE END OF THE STORY""; not in openFDA"
+K131684,K073102,product_family,false,"Prior clearance of the same heads (""previously cleared through""); K061312 in the same sentence was extracted because it is also in the predicate section"
+K150062,K042344,product_family,false,Other clearances in the Excia product range
+K150062,K060437,product_family,false,Other clearances in the Excia product range
+K150062,K061344,product_family,false,Other clearances in the Excia product range
+K150062,K092143,product_family,false,Other clearances in the Excia product range
+K213580,K151440,compatible_device,false,Klassic Blade stems the device is compatible with
+K213580,K171962,compatible_device,false,Klassic Blade stems the device is compatible with
+K955117,K965117,ocr_artifact,false,Own number misread in a fax header; K965117 exists in openFDA as an unrelated device
+K974093,K973119,co_submission,false,"Cleared in the same FDA letter, not predicates"
+K974093,K974095,co_submission,false,"Cleared in the same FDA letter, not predicates"

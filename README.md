@@ -4,7 +4,7 @@ Extracting predicate device lineage from FDA 510(k) summary PDFs with Databricks
 
 A 510(k) clearance lets a medical device go to market by showing it is substantially equivalent to a device already on the market: its **predicate**. openFDA publishes the clearances as structured data, but not which predicates each device cited. That information only exists in the summary PDFs, many of them scanned, faxed or partly handwritten. This project turns those documents into a lineage graph (device cites predicate) and measures how far the extracted data can be trusted.
 
-> **Status:** work in progress. The pipeline runs end to end on a sample of 100 hip implant submissions (product codes JDI, LPH and LZO). Next steps are listed at the end.
+> **Status:** work in progress. The pipeline runs end to end, every day, on a growing sample of hip implant submissions (product codes JDI, LPH and LZO): 15 new PDFs per run. Next steps are listed at the end.
 
 ## How it works
 
@@ -37,9 +37,30 @@ flowchart LR
 
 The two AI models are incremental with full refresh disabled, so each document is processed once, and a `dbt run --full-refresh` cannot re-run the LLM on everything by accident.
 
+## Orchestration
+
+One Databricks job, defined in the Asset Bundle ([resources/pipeline_job.yml](resources/pipeline_job.yml)), runs the whole pipeline every day:
+
+```mermaid
+flowchart LR
+    S([Daily at 13:00<br/>Europe/Lisbon]) --> T1
+    T1[load_openfda<br/>Python wheel task<br/>only when openFDA has a new export] --> T2
+    T2[load_pdfs<br/>Python wheel task<br/>up to 15 new PDFs] --> T3
+    T3[dbt_build<br/>dbt task on a SQL warehouse<br/>new documents only through the AI,<br/>then resolution, graph, mart and tests]
+    T3 -. on failure .-> E[email to the job owner]
+```
+
+![Job run in Databricks](docs/images/job_run.png)
+
+- **Incremental by design.** Each task only does new work: openFDA is reloaded when a new export exists, PDFs already attempted are skipped (failures included), and only unprocessed documents reach `ai_parse_document` and `ai_query`. A run with nothing new costs almost nothing.
+- **Bounded AI cost.** `max_pdfs` (15) caps downloads per run and `ai_batch_limit` (30) caps documents sent to the AI, so a backlog is absorbed over several days instead of in one expensive run.
+- **Tests in every run.** `dbt build` runs the unit test and all data tests. Errors fail the run and trigger the email. New recall gaps or name matches that are not reviewed yet raise warnings, not failures, and show up in the quality mart.
+- **Two targets.** `dev` is for testing: resources get a `[dev <user>]` prefix and the schedule is paused. `prod` holds the scheduled job.
+- **No secrets.** dbt runs on the SQL warehouse as the job owner, and Databricks generates the dbt profile, so no token is stored anywhere.
+
 ## Results on the current sample
 
-All numbers come from `mart_extraction_quality`.
+All numbers come from `mart_extraction_quality`, snapshot of 28 September 2026 (82 documents). The sample grows every day.
 
 | Step | Result |
 |---|---|
@@ -91,13 +112,13 @@ The full physical model is in [docs/data-model.md](docs/data-model.md).
 
 - **Databricks**: Unity Catalog, Volumes, serverless jobs and SQL warehouse, `ai_parse_document`, `ai_query` (Claude Sonnet 4.5 through Databricks model serving)
 - **dbt** (`dbt-databricks`): incremental models, custom generic tests, unit tests, seeds for manual reviews
-- **Databricks Asset Bundles** for the ingestion job
+- **Databricks Asset Bundles** for the daily job (Python wheel tasks and a dbt task), with `dev` and `prod` targets
 - **Python** for ingestion, with pytest unit tests
 - **uv** for dependencies (`uv.lock`)
 
 ## Running it
 
-Prerequisites: a Databricks workspace with Unity Catalog and AI functions, permission to create tables and a Volume in one schema, the Databricks CLI, and [uv](https://docs.astral.sh/uv/).
+Prerequisites: a Databricks workspace with Unity Catalog and AI functions, permission to create tables and a Volume in one schema, a SQL warehouse, the Databricks CLI, and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 # 1. Environment
@@ -106,14 +127,15 @@ source .venv/bin/activate
 cp .env.example .env          # fill in your profile, catalog, schema and warehouse
 set -a; source .env; set +a
 
-# 2. Ingestion: openFDA metadata and the PDF sample
+# 2. Test the full pipeline once (dev target, schedule paused)
 databricks bundle deploy
-databricks bundle run fda_ingest
+databricks bundle run fda_pipeline
 
-# 3. Transformations, AI steps and tests
-cd dbt
-dbt build
+# 3. Deploy the scheduled daily job
+databricks bundle deploy -t prod
 ```
+
+For local development, dbt can also run from your machine against the same warehouse (`cd dbt && dbt build`).
 
 No workspace details or secrets are stored in the repository: everything comes from `.env`, which is git-ignored.
 
@@ -121,12 +143,13 @@ No workspace details or secrets are stored in the repository: everything comes f
 
 ```
 databricks.yml          Asset Bundle (workspace comes from the environment)
-resources/              Databricks job definitions
+resources/              Databricks job definition (daily pipeline)
 src/fda_ingest/         Python ingestion package
 tests/                  pytest tests for the ingestion code
 dbt/                    dbt project: staging, intermediate and marts models, tests
 docs/decisions/         Decision records
 docs/spikes/            Extraction spike write-up
+docs/images/            Screenshots used in this README
 scripts/                Feasibility check and spike SQL
 ```
 
@@ -136,5 +159,4 @@ scripts/                Feasibility check and spike SQL
 - CI with GitHub Actions (unit tests and dbt parsing; the workspace itself is not reachable from CI)
 - Hand-label 20 to 30 documents and report precision and recall per field and era ([ADR 0006](docs/decisions/0006-hand-labeled-evaluation-set.md))
 - Capture primary and additional predicates separately (prompt v3)
-- Run dbt from the bundle job, so ingestion and transformations run as one workflow
 - Extend the sample beyond three product codes

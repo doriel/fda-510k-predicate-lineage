@@ -1,5 +1,7 @@
 {#
-  Candidate openFDA records for predicates cited by name only (status name_only).
+  Candidate openFDA records for predicates cited by name only
+  (identifier_type = 'none'). Reads from int_predicate_citations, not from
+  int_predicate_resolution, because the resolution uses these results.
 
   Blocking rules, so only plausible candidates are scored:
   - same review panel as the subject device;
@@ -23,25 +25,25 @@
 
 with name_only as (
     select
-        r.subject_k_number,
-        r.content_sha256,
-        r.parser_version,
-        r.prompt_version,
-        r.model_endpoint,
-        r.citation_seq,
-        r.device_name,
-        r.manufacturer,
-        r.subject_decision_date
-    from {{ ref('int_predicate_resolution') }} as r
-    where r.resolution_status = 'name_only'
-      and r.role = 'predicate'
-      and r.prompt_version = '{{ accepted }}'
-      and r.model_endpoint = '{{ var("extraction_endpoint") }}'
+        c.subject_k_number,
+        c.content_sha256,
+        c.parser_version,
+        c.prompt_version,
+        c.model_endpoint,
+        c.citation_seq,
+        c.device_name,
+        c.manufacturer
+    from {{ ref('int_predicate_citations') }} as c
+    where c.identifier_type = 'none'
+      and c.role = 'predicate'
+      and c.prompt_version = '{{ accepted }}'
+      and c.model_endpoint = '{{ var("extraction_endpoint") }}'
 ),
 
 citations as (
     select
         n.*,
+        s.decision_date                                               as subject_decision_date,
         s.review_panel_code                                           as subject_panel,
         coalesce(n.manufacturer, s.applicant)                         as company_used,
         if(n.manufacturer is null, 'subject_applicant', 'cited')      as company_source,

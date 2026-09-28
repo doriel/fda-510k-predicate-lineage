@@ -9,8 +9,8 @@
     no_match      candidates exist but none passes the threshold
     no_candidate  no openFDA record shares a word, panel and date window
 
-  Thresholds are vars and must be calibrated by reviewing results. This model is
-  not yet used by the lineage graph.
+  Thresholds are vars, calibrated on a manual review (seed name_match_review).
+  Matched citations become resolved_by_name in int_predicate_resolution.
 #}
 
 {% set min_score = var('name_match_min_score') %}
@@ -20,8 +20,8 @@
 with name_only as (
     select subject_k_number, content_sha256, parser_version, prompt_version, model_endpoint,
            citation_seq, device_name, manufacturer
-    from {{ ref('int_predicate_resolution') }}
-    where resolution_status = 'name_only'
+    from {{ ref('int_predicate_citations') }}
+    where identifier_type = 'none'
       and role = 'predicate'
       and prompt_version = '{{ accepted }}'
       and model_endpoint = '{{ var("extraction_endpoint") }}'

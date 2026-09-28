@@ -18,6 +18,7 @@ models:
                 values:
                   - resolved
                   - repaired
+                  - resolved_by_name
                   - malformed
                   - not_found
                   - date_violation
@@ -26,8 +27,14 @@ models:
                   - name_only
                   - unidentified
                   - other_pathway
+      - name: resolution_method
+        description: identifier (from the K-number) or name_match (from device name and company). Null when not resolved.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [identifier, name_match]
       - name: resolved_k_number
-        description: Set only for resolved and repaired citations.
+        description: Set only for resolved, repaired and resolved_by_name citations.
         data_tests:
           - relationships:
               arguments:
@@ -43,7 +50,7 @@ models:
 
 unit_tests:
   - name: test_resolution_statuses
-    description: One citation per status, including the K9903690 repair from the spike.
+    description: One citation per status, including the K9903690 repair from the spike and a name match.
     model: int_predicate_resolution
     given:
       - input: ref('int_predicate_citations')
@@ -62,27 +69,36 @@ unit_tests:
           - {subject_k_number: K120001, citation_seq: 6, role: predicate, identifier_type: k_number, identifier_normalized: K9914850, is_well_formed: false}
           # self_citation
           - {subject_k_number: K120001, citation_seq: 7, role: predicate, identifier_type: k_number, identifier_normalized: K120001, is_well_formed: true}
-          # exempt, name_only, unidentified, other_pathway
+          # exempt, name_only (no confident match), unidentified, other_pathway
           - {subject_k_number: K120001, citation_seq: 8, role: predicate, identifier_type: exempt}
           - {subject_k_number: K120001, citation_seq: 9, role: predicate, identifier_type: none}
           - {subject_k_number: K120001, citation_seq: 10, role: predicate, identifier_type: unidentified}
           - {subject_k_number: K120001, citation_seq: 11, role: predicate, identifier_type: pma, identifier_normalized: P123456, is_well_formed: true}
+          # resolved_by_name: cited by name only, matched with confidence
+          - {subject_k_number: K120001, citation_seq: 12, role: predicate, identifier_type: none}
       - input: ref('stg_openfda__submissions')
         rows:
           - {k_number: K120001, decision_date: "2012-06-01"}
           - {k_number: K100001, decision_date: "2010-01-15"}
           - {k_number: K150001, decision_date: "2015-03-01"}
           - {k_number: K990369, decision_date: "1999-05-01"}
+          - {k_number: K080001, decision_date: "2008-02-01"}
+      - input: ref('int_name_resolution')
+        rows:
+          # citation 9 was not confidently matched; citation 12 was.
+          - {subject_k_number: K120001, citation_seq: 9, match_status: ambiguous, best_k_number: K080001, best_score: 0.7}
+          - {subject_k_number: K120001, citation_seq: 12, match_status: matched, best_k_number: K080001, best_score: 0.8}
     expect:
       rows:
-        - {citation_seq: 1, resolution_status: resolved, resolved_k_number: K100001}
-        - {citation_seq: 2, resolution_status: date_violation, resolved_k_number: null}
-        - {citation_seq: 3, resolution_status: not_found, resolved_k_number: null}
-        - {citation_seq: 4, resolution_status: repaired, resolved_k_number: K990369}
-        - {citation_seq: 5, resolution_status: malformed, resolved_k_number: null}
-        - {citation_seq: 6, resolution_status: malformed, resolved_k_number: null}
-        - {citation_seq: 7, resolution_status: self_citation, resolved_k_number: null}
-        - {citation_seq: 8, resolution_status: exempt, resolved_k_number: null}
-        - {citation_seq: 9, resolution_status: name_only, resolved_k_number: null}
-        - {citation_seq: 10, resolution_status: unidentified, resolved_k_number: null}
-        - {citation_seq: 11, resolution_status: other_pathway, resolved_k_number: null}
+        - {citation_seq: 1, resolution_status: resolved, resolution_method: identifier, resolved_k_number: K100001}
+        - {citation_seq: 2, resolution_status: date_violation, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 3, resolution_status: not_found, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 4, resolution_status: repaired, resolution_method: identifier, resolved_k_number: K990369}
+        - {citation_seq: 5, resolution_status: malformed, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 6, resolution_status: malformed, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 7, resolution_status: self_citation, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 8, resolution_status: exempt, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 9, resolution_status: name_only, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 10, resolution_status: unidentified, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 11, resolution_status: other_pathway, resolution_method: null, resolved_k_number: null}
+        - {citation_seq: 12, resolution_status: resolved_by_name, resolution_method: name_match, resolved_k_number: K080001}

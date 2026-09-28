@@ -5,6 +5,7 @@ models:
     description: >
       Predicate lineage edges: subject device cites predicate device.
       One row per (subject_k_number, predicate_k_number), accepted prompt version only.
+      Includes predicates resolved by K-number and by confident name match.
     data_tests:
       - unique:
           arguments:
@@ -40,3 +41,14 @@ models:
                 field: k_number
       - name: predicate_age_days
         description: Days between the predicate's clearance and the subject's clearance.
+      - name: resolution_method
+        description: >
+          identifier when at least one citation of the pair came from a K-number;
+          name_match when the edge rests only on name matching (less certain).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [identifier, name_match]
+      - name: name_match_score
+        description: Similarity score of the name match, null for identifier edges.

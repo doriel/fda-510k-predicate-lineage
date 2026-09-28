@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: int_name_match_candidates
+    description: >
+      Scored openFDA candidates for predicates cited by name only. Same panel,
+      cleared on or before the subject, at least one shared word in the name.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "subject_k_number || '|' || content_sha256 || '|' || parser_version || '|' || prompt_version || '|' || model_endpoint || '|' || cast(citation_seq as string) || '|' || candidate_k_number"
+    columns:
+      - name: match_score
+        data_tests:
+          - not_null
+      - name: candidate_k_number
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_openfda__submissions')
+                field: k_number
+
+  - name: int_name_resolution
+    description: >
+      Matching decision for each predicate cited by name only. Not yet used by
+      the lineage graph: thresholds are being calibrated.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "subject_k_number || '|' || content_sha256 || '|' || parser_version || '|' || prompt_version || '|' || model_endpoint || '|' || cast(citation_seq as string)"
+    columns:
+      - name: match_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [matched, ambiguous, no_match, no_candidate]

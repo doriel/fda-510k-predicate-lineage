@@ -31,6 +31,11 @@ vars:
   # decision, separate from running a new prompt version (ADR 0005).
   accepted_prompt_version: v2
 
+  # Name matching for predicates cited without a number (int_name_resolution).
+  # Initial guesses; calibrate them by reviewing the matches.
+  name_match_min_score: 0.6
+  name_match_min_margin: 0.1
+
 models:
   fda_510k:
     staging:

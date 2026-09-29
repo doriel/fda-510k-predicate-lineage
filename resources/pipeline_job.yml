@@ -12,7 +12,7 @@ resources:
       schedule:
         quartz_cron_expression: "0 0 13 * * ?"
         timezone_id: Europe/Lisbon
-        pause_status: UNPAUSED
+        # pause_status: UNPAUSED
 
       max_concurrent_runs: 1
 

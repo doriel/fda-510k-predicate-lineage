@@ -62,29 +62,43 @@ flowchart LR
 
 ## Results on the current sample
 
-All numbers come from `mart_extraction_quality`, snapshot of 28 September 2026 (82 documents). The sample grows every day.
+All numbers come from `mart_extraction_quality`, snapshot of 1 October 2026 (147 documents). The sample grows every day.
 
 | Step | Result |
 |---|---|
-| PDFs downloaded | 82 of 100 attempts (each failed attempt is recorded with its status) |
-| Parsed with `ai_parse_document` | 82 of 82 |
-| Extracted with `ai_query` | 82 of 82 |
-| Predicate citations resolved to openFDA | 299 of 320 (93%): 284 by K-number, 15 by name matching |
-| Left unresolved | 21 citations named without a number and without a confident match, never guessed |
-| Lineage graph | 246 edges (231 by K-number, 15 by name), 216 distinct predicates |
-| Devices with at least one predicate in the graph | 70 of 82 |
+| PDFs downloaded | 147 of 175 attempts (each failed attempt is recorded with its status) |
+| Parsed with `ai_parse_document` | 147 of 147 |
+| Extracted with `ai_query` | 147 of 147 |
+| Predicate citations resolved to openFDA | 497 of 528 (94%): 476 by K-number, 21 by name matching |
+| Left unresolved | 30 citations named without a number and without a confident match (never guessed), 1 citing another pathway |
+| Lineage graph | 443 edges (422 by K-number, 21 by name), 358 distinct predicates |
+| Devices with at least one predicate in the graph | 133 of 147 |
 | Median predicate age | about 5 years between the predicate's clearance and the citing device's |
 
-**Measured quality**, from manual reviews stored as dbt seeds:
+**Measured quality**, from manual reviews stored as dbt seeds. The sample grows faster than the reviews, so the tables say how much is covered; dbt warns on every run while something is not reviewed yet.
 
 | Check | Result |
 |---|---|
-| Recall check: K-numbers in the text that the LLM did not extract | 41 found, 41 reviewed, **0 were real misses** (compatible devices, product history, OCR misreads of the document's own number) |
-| Name matches | 15 reviewed: **13 correct, 2 plausible, 0 wrong** |
+| Recall check: K-numbers in the text that the LLM did not extract | 51 found, 41 reviewed so far, **0 real misses among them** (compatible devices, product history, OCR misreads of the document's own number) |
+| Name matches | 21 found, 15 reviewed so far: **13 correct, 2 plausible, 0 wrong** |
 
 During the extraction spike, a 28-page scanned submission (K123598) listing about 100 predicates was extracted with 102 of 102 distinct identifiers matching the PDF, while an independent Tesseract OCR baseline misread 5 of them. Details in [the spike write-up](docs/spikes/2026-09-extraction-spike.md).
 
 These checks measure recall on K-numbers present in the text and precision of name matching. Field-level precision and recall of the extraction as a whole need the hand-labeled evaluation set planned in [ADR 0006](docs/decisions/0006-hand-labeled-evaluation-set.md).
+
+## Dashboard
+
+A Databricks AI/BI dashboard on top of the quality mart and the lineage graph, refreshed by the daily job.
+
+![Pipeline quality page](docs/images/dashboard_quality.png)
+
+![Predicate lineage page](docs/images/dashboard_lineage.png)
+
+What the lineage page shows on the current sample:
+
+- Most predicates are recent: about three quarters were cleared less than 10 years before the device citing them.
+- About 1 in 5 edges points to a device outside the three sampled product codes, so the lineage crosses device categories.
+- Edges resolved by name matching come from submissions cleared between 1996 and 2009. Older summaries often name their predicates without a K-number.
 
 ## Data quality
 
@@ -114,7 +128,7 @@ The full physical model is in [docs/data-model.md](docs/data-model.md).
 
 ## Stack
 
-- **Databricks**: Unity Catalog, Volumes, serverless jobs and SQL warehouse, `ai_parse_document`, `ai_query` (Claude Sonnet 4.5 through Databricks model serving)
+- **Databricks**: Unity Catalog, Volumes, serverless jobs and SQL warehouse, `ai_parse_document`, `ai_query` (Claude Sonnet 4.5 through Databricks model serving), AI/BI dashboards
 - **dbt** (`dbt-databricks`): incremental models, custom generic tests, unit tests, seeds for manual reviews
 - **Databricks Asset Bundles** for the daily job (Python wheel tasks and a dbt task), with `dev` and `prod` targets
 - **Python** for ingestion, with pytest unit tests
@@ -155,13 +169,14 @@ tests/                  pytest tests for the ingestion code
 dbt/                    dbt project: staging, intermediate and marts models, tests
 docs/decisions/         Decision records
 docs/spikes/            Extraction spike write-up
-docs/images/            Screenshots used in this README
+docs/images/            Screenshots used in this README (job run, dashboard)
 scripts/                Feasibility check and spike SQL
 ```
 
 ## Next steps
 
-- A dashboard on the lineage graph and the quality mart
+- Keep the manual reviews up to date as the sample grows
+- Define the dashboard in the Asset Bundle, next to the job
 - Hand-label 20 to 30 documents and report precision and recall per field and era ([ADR 0006](docs/decisions/0006-hand-labeled-evaluation-set.md))
 - Capture primary and additional predicates separately (prompt v3)
 - Extend the sample beyond three product codes

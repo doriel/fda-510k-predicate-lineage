@@ -88,7 +88,7 @@ These checks measure recall on K-numbers present in the text and precision of na
 
 ## Dashboard
 
-A Databricks AI/BI dashboard on top of the quality mart and the lineage graph, refreshed by the daily job.
+A Databricks AI/BI dashboard on top of the quality mart and the lineage graph. Its data is refreshed by the daily job, and the dashboard itself is defined in the Asset Bundle ([resources/fda_dashboard.dashboard.yml](resources/fda_dashboard.dashboard.yml)): the queries use table names only, and the catalog, schema and warehouse come from the environment, like the job.
 
 ![Pipeline quality page](docs/images/dashboard_quality.png)
 
@@ -130,7 +130,7 @@ The full physical model is in [docs/data-model.md](docs/data-model.md).
 
 - **Databricks**: Unity Catalog, Volumes, serverless jobs and SQL warehouse, `ai_parse_document`, `ai_query` (Claude Sonnet 4.5 through Databricks model serving), AI/BI dashboards
 - **dbt** (`dbt-databricks`): incremental models, custom generic tests, unit tests, seeds for manual reviews
-- **Databricks Asset Bundles** for the daily job (Python wheel tasks and a dbt task), with `dev` and `prod` targets
+- **Databricks Asset Bundles** for the daily job (Python wheel tasks and a dbt task) and the dashboard, with `dev` and `prod` targets
 - **Python** for ingestion, with pytest unit tests
 - **uv** for dependencies (`uv.lock`)
 - **GitHub Actions** for CI
@@ -163,8 +163,9 @@ No workspace details or secrets are stored in the repository: everything comes f
 ```
 databricks.yml          Asset Bundle (workspace comes from the environment)
 .github/workflows/      CI
-resources/              Databricks job definition (daily pipeline)
+resources/              Databricks job (daily pipeline) and dashboard definitions
 src/fda_ingest/         Python ingestion package
+src/*.lvdash.json       Dashboard definition (exported from the UI)
 tests/                  pytest tests for the ingestion code
 dbt/                    dbt project: staging, intermediate and marts models, tests
 docs/decisions/         Decision records
@@ -176,7 +177,6 @@ scripts/                Feasibility check and spike SQL
 ## Next steps
 
 - Keep the manual reviews up to date as the sample grows
-- Define the dashboard in the Asset Bundle, next to the job
 - Hand-label 20 to 30 documents and report precision and recall per field and era ([ADR 0006](docs/decisions/0006-hand-labeled-evaluation-set.md))
 - Capture primary and additional predicates separately (prompt v3)
 - Extend the sample beyond three product codes

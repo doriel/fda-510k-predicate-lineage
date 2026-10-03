@@ -1,0 +1,10 @@
+# AI/BI dashboard on the quality mart and the lineage graph.
+# Queries use table names only; catalog, schema and warehouse come from .env.
+resources:
+  dashboards:
+    fda_dashboard:
+      display_name: "FDA 510(k) Predicate Lineage"
+      file_path: ../src/fda_dashboard.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      dataset_catalog: ${var.catalog}
+      dataset_schema: ${var.schema}

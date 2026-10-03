@@ -1,0 +1,707 @@
+{
+  "datasets": [
+    {
+      "displayName": "kpis",
+      "name": "157d6818",
+      "queryLines": [
+        "select\r\n",
+        "  max(if(metric = 'documents_extracted', numerator, null)) as documents_extracted,\r\n",
+        "  round(max(if(metric = 'citations_in_graph', rate, null)) * 100, 1) as pct_citations_resolved,\r\n",
+        "  max(if(metric = 'edges', numerator, null)) as edges,\r\n",
+        "  max(if(metric = 'name_matches_wrong', numerator, null)) as name_matches_wrong\r\n",
+        "from\r\n",
+        "fda_mart_extraction_quality"
+      ]
+    },
+    {
+      "displayName": "coverage",
+      "name": "b3496ce3",
+      "queryLines": [
+        "select\r\n",
+        "    case metric\r\n",
+        "        when 'pdfs_downloaded'         then '1. PDFs downloaded'\r\n",
+        "        when 'documents_parsed'        then '2. Parsed'\r\n",
+        "        when 'documents_extracted'     then '3. Extracted'\r\n",
+        "        when 'devices_with_predicates' then '4. With predicates in graph'\r\n",
+        "    end as step,\r\n",
+        "    numerator as documents\r\n",
+        "from fda_mart_extraction_quality\r\n",
+        "where metric in ('pdfs_downloaded', 'documents_parsed', 'documents_extracted', 'devices_with_predicates')\r\n",
+        "union all\r\n",
+        "select '0. Download attempts', denominator\r\n",
+        "from fda_mart_extraction_quality\r\n",
+        "where metric = 'pdfs_downloaded'"
+      ]
+    },
+    {
+      "displayName": "resolution",
+      "name": "134cff90",
+      "queryLines": [
+        "select replace(metric, 'citations_', '') as resolution_status, numerator as citations\r\n",
+        "from fda_mart_extraction_quality\r\n",
+        "where metric_group = 'resolution'\r\n",
+        "  and metric <> 'citations_in_graph'"
+      ]
+    },
+    {
+      "displayName": "edges",
+      "name": "d3a20236",
+      "queryLines": [
+        "select\r\n",
+        "    e.subject_k_number,\r\n",
+        "    e.predicate_k_number,\r\n",
+        "    e.resolution_method,\r\n",
+        "    e.was_repaired,\r\n",
+        "    cast(year(e.subject_decision_date) as string) as subject_year,\r\n",
+        "    round(e.predicate_age_days / 365.25, 1)       as predicate_age_years,\r\n",
+        "    s.device_name                                 as subject_device,\r\n",
+        "    s.applicant                                   as subject_applicant,\r\n",
+        "    p.device_name                                 as predicate_device,\r\n",
+        "    p.applicant                                   as predicate_applicant,\r\n",
+        "    p.product_code                                as predicate_product_code,\r\n",
+        "    p.product_code in ('JDI', 'LPH', 'LZO')       as predicate_in_sample_codes,\r\n",
+        "    if(p.product_code in ('JDI', 'LPH', 'LZO'),\r\n",
+        "       'Same product codes (JDI, LPH, LZO)',\r\n",
+        "       'Other product codes')                     as predicate_origin\r\n",
+        "from fda_fct_predicate_edge as e\r\n",
+        "join fda_stg_openfda__submissions as s\r\n",
+        "    on s.k_number = e.subject_k_number\r\n",
+        "join fda_stg_openfda__submissions as p\r\n",
+        "    on p.k_number = e.predicate_k_number"
+      ]
+    },
+    {
+      "displayName": "top_predicates",
+      "name": "a6c9b867",
+      "queryLines": [
+        "select\r\n",
+        "    e.predicate_k_number,\r\n",
+        "    p.device_name,\r\n",
+        "    p.applicant,\r\n",
+        "    year(p.decision_date)            as cleared_year,\r\n",
+        "    count(distinct e.subject_k_number) as cited_by\r\n",
+        "from fda_fct_predicate_edge as e\r\n",
+        "join fda_stg_openfda__submissions as p\r\n",
+        "    on p.k_number = e.predicate_k_number\r\n",
+        "group by all\r\n",
+        "order by cited_by desc\r\n",
+        "limit 15"
+      ]
+    },
+    {
+      "displayName": "predicate_age",
+      "name": "1fdc9152",
+      "queryLines": [
+        "select\r\n",
+        "    concat(lpad(cast(floor(predicate_age_days / 365.25 / 5) * 5 as string), 2, '0'),\r\n",
+        "           '-',\r\n",
+        "           lpad(cast(floor(predicate_age_days / 365.25 / 5) * 5 + 4 as string), 2, '0'))\r\n",
+        "        as age_years,\r\n",
+        "    count(*) as edges\r\n",
+        "from fda_fct_predicate_edge\r\n",
+        "group by 1\r\n",
+        "order by 1"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "displayName": "Pipeline quality",
+      "layout": [
+        {
+          "position": {
+            "height": 4,
+            "width": 3,
+            "x": 0,
+            "y": 0
+          },
+          "widget": {
+            "name": "documents-extracted",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "157d6818",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "SUM(`documents_extracted`)",
+                      "name": "sum(documents_extracted)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(documents_extracted)"
+                }
+              },
+              "frame": {
+                "showDescription": false,
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Documents extracted"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 4,
+            "width": 3,
+            "x": 3,
+            "y": 0
+          },
+          "widget": {
+            "name": "fa510ca8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "157d6818",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "SUM(`pct_citations_resolved`)",
+                      "name": "sum(pct_citations_resolved)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(pct_citations_resolved)"
+                }
+              },
+              "frame": {
+                "showDescription": false,
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Citations resolved (%)"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 4,
+            "width": 3,
+            "x": 6,
+            "y": 0
+          },
+          "widget": {
+            "name": "7b0fda1a",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "157d6818",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "SUM(`edges`)",
+                      "name": "sum(edges)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(edges)"
+                }
+              },
+              "frame": {
+                "showDescription": false,
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Lineage edges"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 4,
+            "width": 3,
+            "x": 9,
+            "y": 0
+          },
+          "widget": {
+            "name": "67b06e9f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "157d6818",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "SUM(`name_matches_wrong`)",
+                      "name": "sum(name_matches_wrong)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(name_matches_wrong)"
+                }
+              },
+              "frame": {
+                "showDescription": false,
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Wrong name matches (reviewed)"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 12,
+            "width": 6,
+            "x": 0,
+            "y": 4
+          },
+          "widget": {
+            "name": "coverage",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b3496ce3",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`step`",
+                      "name": "step"
+                    },
+                    {
+                      "expression": "SUM(`documents`)",
+                      "name": "sum(documents)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "label": {
+                  "show": true
+                },
+                "x": {
+                  "fieldName": "step",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "displayName": "Documents",
+                  "fieldName": "sum(documents)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Coverage"
+                }
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 12,
+            "width": 6,
+            "x": 6,
+            "y": 4
+          },
+          "widget": {
+            "name": "citations-by-resolution-status",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "134cff90",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`resolution_status`",
+                      "name": "resolution_status"
+                    },
+                    {
+                      "expression": "SUM(`citations`)",
+                      "name": "sum(citations)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "label": {
+                  "show": true
+                },
+                "x": {
+                  "fieldName": "resolution_status",
+                  "scale": {
+                    "sort": {
+                      "by": "y"
+                    },
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "displayName": "Citations",
+                  "fieldName": "sum(citations)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Citations by resolution status"
+                }
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "name": "fb13fc31",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "displayName": "Predicate lineage",
+      "layout": [
+        {
+          "position": {
+            "height": 8,
+            "width": 6,
+            "x": 0,
+            "y": 0
+          },
+          "widget": {
+            "name": "predicate-age-years",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1fdc9152",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`age_years`",
+                      "name": "age_years"
+                    },
+                    {
+                      "expression": "SUM(`edges`)",
+                      "name": "sum(edges)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "label": {
+                  "show": true
+                },
+                "x": {
+                  "fieldName": "age_years",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(edges)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Predicate age (years)"
+                }
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 8,
+            "width": 6,
+            "x": 6,
+            "y": 0
+          },
+          "widget": {
+            "name": "edges-by-clearance-year",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d3a20236",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`resolution_method`",
+                      "name": "resolution_method"
+                    },
+                    {
+                      "expression": "`subject_year`",
+                      "name": "subject_year"
+                    },
+                    {
+                      "expression": "COUNT(`*`)",
+                      "name": "count(*)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "color": {
+                  "fieldName": "resolution_method",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "fieldName": "subject_year",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Edges by clearance year"
+                }
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 9,
+            "width": 6,
+            "x": 0,
+            "y": 8
+          },
+          "widget": {
+            "name": "predicates-other-product-codes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d3a20236",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "COUNT(`*`)",
+                      "name": "count(*)"
+                    },
+                    {
+                      "expression": "`predicate_origin`",
+                      "name": "predicate_origin"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "angle": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "predicate_origin",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Predicate product code"
+                }
+              },
+              "version": 3,
+              "widgetType": "pie"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 9,
+            "width": 6,
+            "x": 6,
+            "y": 8
+          },
+          "widget": {
+            "name": "most-cited-predicates",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a6c9b867",
+                  "disaggregated": true,
+                  "fields": [
+                    {
+                      "expression": "`predicate_k_number`",
+                      "name": "predicate_k_number"
+                    },
+                    {
+                      "expression": "`device_name`",
+                      "name": "device_name"
+                    },
+                    {
+                      "expression": "`applicant`",
+                      "name": "applicant"
+                    },
+                    {
+                      "expression": "`cleared_year`",
+                      "name": "cleared_year"
+                    },
+                    {
+                      "expression": "`cited_by`",
+                      "name": "cited_by"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "predicate_k_number"
+                  },
+                  {
+                    "fieldName": "device_name"
+                  },
+                  {
+                    "fieldName": "applicant"
+                  },
+                  {
+                    "fieldName": "cleared_year"
+                  },
+                  {
+                    "fieldName": "cited_by"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "Most cited predicates"
+                }
+              },
+              "version": 2,
+              "widgetType": "table"
+            }
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "name": "1fd8adc5",
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "applyModeEnabled": false,
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}

@@ -6,7 +6,7 @@ Extracting predicate device lineage from FDA 510(k) summary PDFs with Databricks
 
 A 510(k) clearance lets a medical device go to market by showing it is substantially equivalent to a device already on the market: its **predicate**. openFDA publishes the clearances as structured data, but not which predicates each device cited. That information only exists in the summary PDFs, many of them scanned, faxed or partly handwritten. This project turns those documents into a lineage graph (device cites predicate) and measures how far the extracted data can be trusted.
 
-> **Status:** the pipeline runs end to end, every day, on a growing sample of hip implant submissions (product codes JDI, LPH and LZO): 15 new PDFs per run. It runs on a Databricks workspace provided by a bootcamp; when that workspace closes, the daily runs stop and the numbers below remain the last snapshot. Next steps are listed at the end.
+> **Status:** the pipeline runs end to end, every day, on a growing sample of hip implant submissions: 15 new PDFs per run, from seven product codes (JDI, LPH and LZO from the start; MEH, KWA, KWY and LWJ added on 3 October 2026, the codes that predicates outside the sample pointed to most often). It runs on a Databricks workspace provided by a bootcamp; when that workspace closes, the daily runs stop and the numbers below remain the last snapshot. Next steps are listed at the end.
 
 ## How it works
 
@@ -62,7 +62,7 @@ flowchart LR
 
 ## Results on the current sample
 
-All numbers come from `mart_extraction_quality`, snapshot of 3 October 2026 (170 documents). The sample grows every day.
+All numbers come from `mart_extraction_quality`, snapshot of 3 October 2026 (170 documents, all from the first three product codes). The sample grows every day.
 
 | Step | Result |
 |---|---|
@@ -99,7 +99,7 @@ A Databricks AI/BI dashboard on top of the quality mart and the lineage graph (s
 What the lineage page shows on the current sample:
 
 - Most predicates are recent: about 70% were cleared less than 10 years before the device citing them.
-- About 1 in 5 edges points to a device outside the three sampled product codes, so the lineage crosses device categories.
+- About 1 in 5 edges pointed to a device outside the three product codes sampled at the time, so the lineage crosses device categories. The four codes added next were chosen from those predicates.
 - Edges resolved by name matching come from submissions cleared between 1996 and 2009. Older summaries often name their predicates without a K-number.
 
 ## Data quality
@@ -182,4 +182,3 @@ scripts/                Feasibility check and spike SQL
 - Prompt change to catch predicates named in the substantial equivalence sentence (the one real miss)
 - Hand-label 20 to 30 documents and report precision and recall per field and era ([ADR 0006](docs/decisions/0006-hand-labeled-evaluation-set.md))
 - Capture primary and additional predicates separately (prompt v3)
-- Extend the sample beyond three product codes

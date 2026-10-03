@@ -25,7 +25,7 @@ variables:
     default: fda_
   product_codes:
     description: Comma-separated FDA product codes that define the PDF sample
-    default: JDI,LPH,LZO
+    default: JDI,LPH,LZO,MEH,KWA,KWY,LWJ
   max_pdfs:
     description: New PDFs downloaded per run
     default: "15"

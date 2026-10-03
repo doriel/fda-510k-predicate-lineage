@@ -181,5 +181,5 @@ name match.
 
 - `fct_predicate_citation`: every citation of the accepted prompt version, whatever its status. Today `int_predicate_resolution` plays this role.
 - `dim_device`: one row per K-number with PDF and parse status.
-- Predicate chain depth across generations (needs a larger sample than three product codes).
+- Predicate chain depth across generations (needs a larger sample).
 - `mart_eval_metrics`: precision and recall per field and era against a hand-labeled seed ([0006](decisions/0006-hand-labeled-evaluation-set.md)).

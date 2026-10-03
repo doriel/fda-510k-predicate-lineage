@@ -14,3 +14,11 @@ K021878,ESKA Modular Hip System,K993027,correct,"ESKA Modular Hip System, filed 
 K090897,TridentTM Porous Titanium Acetabular Shell,K010170,correct,"Trident porous titanium acetabular component by Howmedica Osteonics, not the similar Biomet product"
 K011533,Ceramic Articul/eze Femoral Balls,K952088,plausible,"Zirconia Articul/eze femoral balls; zirconia is a ceramic, not confirmed in the PDF"
 K983035,Recovery Protusio Cage,K971890,correct,Recovery Protrusio Cage by Biomet; the PDF misspells Protrusio
+K022555,Accolade™ C Femoral Stem,K002320,correct,"Same product (Accolade C femoral component), same company"
+K061168,PCA® Femoral Heads,K993601,plausible,"Same company, but the openFDA name is generic (femoral heads) and does not confirm the PCA line"
+K961921,PFC™ Total Hip System,K944132,correct,"P.F.C. Total Hip System, Johnson & Johnson Professionals"
+K961921,Ranawat/Burstein™ Total Hip System,K921277,correct,"Identical name, Biomet (cited as Biotmet in the document)"
+K981847,Alumina C-Taper Ceramic Femoral Head,K971409,correct,"Osteonics Alumina C-Taper Head, same company"
+K993027,Ranawat / Burstein Total Hip System,K921277,correct,"Identical name, Biomet"
+K993027,Omega Total Hip System,K990003,plausible,"J-Series Omega Total Hip System, same company; may be a later variant of the cited system"
+K994078,DePuy AML Hip Prosthesis,K914078,plausible,"Same company, but the openFDA name is generic (DePuy hip prosthesis) and does not confirm the AML line"

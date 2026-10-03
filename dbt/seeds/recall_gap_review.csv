@@ -40,3 +40,39 @@ K213580,K171962,compatible_device,false,Klassic Blade stems the device is compat
 K955117,K965117,ocr_artifact,false,Own number misread in a fax header; K965117 exists in openFDA as an unrelated device
 K974093,K973119,co_submission,false,"Cleared in the same FDA letter, not predicates"
 K974093,K974095,co_submission,false,"Cleared in the same FDA letter, not predicates"
+K020076,K020074,ocr_artifact,false,Own number K020076 misread in the page header; not in openFDA
+K040412,K040410,ocr_artifact,false,Own number misread on the indications form; K040410 exists in openFDA as an unrelated device
+K040412,K040418,ocr_artifact,false,Own number misread in the page header; not in openFDA
+K052255,K652255,ocr_artifact,false,Own number misread in the page header; not in openFDA
+K061066,K041066,ocr_artifact,false,Own number misread on the indications form; K041066 exists in openFDA as an unrelated shoulder prosthesis
+K061168,K041168,ocr_artifact,false,Own number misread on the indications form; K041168 exists in openFDA as an unrelated bone graft putty
+K061312,K002757,compatible_device,false,Biomet system the heads are indicated for use with (indications for use)
+K061312,K021380,compatible_device,false,Biomet system the heads are indicated for use with (indications for use)
+K061312,K033871,compatible_device,false,Biomet system the heads are indicated for use with (indications for use)
+K061312,K042774,compatible_device,false,Biomet system the heads are indicated for use with (indications for use)
+K061312,K974558,compatible_device,false,Biomet system the heads are indicated for use with (indications for use)
+K061312,K990830,compatible_device,false,Biomet system the heads are indicated for use with (indications for use)
+K062148,K862141,ocr_artifact,false,Own number misread on the indications form; K862141 exists in openFDA as unrelated histology paraffin
+K181693,K072857,compatible_device,false,Medacta head the SMS stem can be combined with
+K181693,K073337,compatible_device,false,Medacta head the SMS stem can be combined with
+K181693,K080885,compatible_device,false,Medacta head the SMS stem can be combined with
+K181693,K082792,product_family,false,Earlier stem of the Medacta Total Hip system the SMS extends
+K181693,K083116,compatible_device,false,Medacta acetabular component used with the SMS stem
+K181693,K091967,compatible_device,false,Medacta bipolar head used with the SMS stem
+K181693,K092265,compatible_device,false,Medacta acetabular component used with the SMS stem
+K181693,K093944,product_family,false,Earlier stem of the Medacta Total Hip system the SMS extends
+K181693,K103352,compatible_device,false,Medacta acetabular component used with the SMS stem
+K181693,K103721,compatible_device,false,Medacta acetabular component and head used with the SMS stem
+K181693,K111145,compatible_device,false,Medacta head the SMS stem can be combined with
+K181693,K112115,compatible_device,false,Medacta head the SMS stem can be combined with
+K181693,K121011,product_family,false,Earlier stem of the Medacta Total Hip system the SMS extends
+K181693,K131518,compatible_device,false,Medacta head the SMS stem can be combined with
+K181693,K132879,compatible_device,false,Medacta acetabular component used with the SMS stem
+K181693,K143453,compatible_device,false,Medacta acetabular component used with the SMS stem
+K181693,K161635,product_family,false,Earlier stem of the Medacta Total Hip system the SMS extends
+K181693,K171966,compatible_device,false,Medacta acetabular component used with the SMS stem
+K181693,K173794,product_family,false,Earlier stem of the Medacta Total Hip system the SMS extends
+K192126,K191216,ocr_artifact,false,Own number misread in the page header; K191216 exists in openFDA as unrelated dosimetry software
+K192919,K192191,ocr_artifact,false,Own number misread in the page header; not in openFDA
+K223828,K192683,real_miss,true,"Named next to K173776 (extracted as a reference) in the substantial equivalence statement, but not extracted in any role"
+K993027,K995027,ocr_artifact,false,Own number misread in the page header; not in openFDA

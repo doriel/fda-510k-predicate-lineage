@@ -6,7 +6,7 @@ Extracting predicate device lineage from FDA 510(k) summary PDFs with Databricks
 
 A 510(k) clearance lets a medical device go to market by showing it is substantially equivalent to a device already on the market: its **predicate**. openFDA publishes the clearances as structured data, but not which predicates each device cited. That information only exists in the summary PDFs, many of them scanned, faxed or partly handwritten. This project turns those documents into a lineage graph (device cites predicate) and measures how far the extracted data can be trusted.
 
-> **Status:** work in progress. The pipeline runs end to end, every day, on a growing sample of hip implant submissions (product codes JDI, LPH and LZO): 15 new PDFs per run. Next steps are listed at the end.
+> **Status:** the pipeline runs end to end, every day, on a growing sample of hip implant submissions (product codes JDI, LPH and LZO): 15 new PDFs per run. It runs on a Databricks workspace provided by a bootcamp; when that workspace closes, the daily runs stop and the numbers below remain the last snapshot. Next steps are listed at the end.
 
 ## How it works
 

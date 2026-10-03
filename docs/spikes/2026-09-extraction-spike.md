@@ -73,9 +73,41 @@ contain typos that must be handled by explicit rules
 - Implication: batch the full corpus, and never re-run AI steps by accident
   ([ADR 0001](../decisions/0001-ai-models-incremental-no-full-refresh.md)).
 
-## Open questions
+## Open questions, and what happened to them
 
-- Throughput and cost on the full corpus, by warehouse size.
-- Whether very long documents need page-level chunking before extraction.
-- Resolving PMA and De Novo predicates against other openFDA endpoints.
-- Applicant name normalization ("Medtronic Inc" against "Medtronic, Inc.").
+Written during the spike; the answers come from running the pipeline daily on
+a growing sample (170 documents by early October 2026).
+
+- **Throughput and cost on the full corpus.** Not measured on the full corpus.
+  The daily run (up to 15 new PDFs) takes 3 to 4 minutes for `dbt build`, most
+  of it in parsing and extraction. Batch limits per run keep the AI cost bounded.
+- **Page-level chunking for long documents.** Not needed so far. The longest
+  documents, such as the 28-page K123598, are extracted whole.
+- **PMA and De Novo predicates.** Still open. They get the status
+  `other_pathway` and stay out of the graph (1 citation so far).
+- **Applicant name normalization.** Solved as part of name matching: device
+  name and company are compared as bags of words, after removing punctuation,
+  trademark signs and plurals.
+
+## After the spike
+
+Findings from the reviews of the running pipeline, recorded in the
+[decision records](../decisions/README.md) and the review seeds:
+
+- **Predicates cited by name only.** About 10% of predicate citations have no
+  K-number, mostly in 1990s and 2000s summaries. A conservative word-similarity
+  match resolves them when one openFDA record is clearly ahead of the others;
+  23 matches reviewed, none wrong ([ADR 0004](../decisions/0004-citation-model-and-resolution.md), amended).
+- **The recall check finds more noise than misses.** 77 K-numbers in the text
+  were not extracted. Only 1 was a real miss (K223828, a device named in the
+  same substantial equivalence sentence as one the model extracted as a
+  reference). The rest:
+  - OCR misreading the document's own number in a header or form, sometimes
+    into a real but unrelated device (a dosimetry software, a histology product);
+  - compatible devices listed in the indications for use;
+  - earlier products of the same family;
+  - devices cleared in the same FDA letter.
+- **The model's own count of predicates is not reliable.** A test comparing it
+  with the extracted list gave only false warnings and was removed.
+- **Prompt v2 holds.** The daily runs use prompt v2 unchanged. The one real
+  miss is the input for the next prompt version.
